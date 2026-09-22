@@ -73,17 +73,21 @@ export default async function NewProductPage({
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          Foto (opcional)
+          Fotos (opcional, hasta 5)
           <input
             type="file"
-            name="imageFile"
+            name="imageFiles"
             accept="image/*"
+            multiple
             className="rounded-lg border border-black/15 px-3 py-2 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-[#2563eb] file:px-3 file:py-1.5 file:text-white dark:border-white/20 dark:bg-transparent"
           />
+          <span className="text-xs text-black/50 dark:text-white/50">
+            La primera foto que elijas queda como la portada del producto.
+          </span>
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          … o URL de imagen (opcional, si no subes una foto)
+          … o URL de imagen (opcional, si no subes fotos)
           <input
             name="imageUrl"
             className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"

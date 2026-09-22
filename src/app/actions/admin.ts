@@ -13,6 +13,7 @@ import {
   bookings,
   productOptions,
   productOptionValues,
+  productImages,
   siteSettings,
 } from "@/db/schema";
 import {
@@ -45,6 +46,35 @@ async function uploadImageIfPresent(formData: FormData) {
 
   const blob = await put(key, file, { access: "public" });
   return blob.url;
+}
+
+const MAX_PRODUCT_IMAGES = 5;
+
+// Igual que uploadImageIfPresent, pero para varios archivos a la vez (la
+// galería de fotos de un producto). Ignora archivos vacíos y devuelve las
+// URLs públicas en el mismo orden en que se subieron.
+async function uploadImagesIfPresent(formData: FormData, fieldName: string) {
+  const files = formData
+    .getAll(fieldName)
+    .filter((f): f is File => f instanceof File && f.size > 0);
+  if (files.length === 0) return [];
+
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    throw new Error(
+      "El almacenamiento de imágenes no está configurado (falta BLOB_READ_WRITE_TOKEN). Revisa el README."
+    );
+  }
+
+  const urls: string[] = [];
+  for (const file of files) {
+    const ext = file.name.split(".").pop() || "jpg";
+    const key = `productos-servicios/${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}.${ext}`;
+    const blob = await put(key, file, { access: "public" });
+    urls.push(blob.url);
+  }
+  return urls;
 }
 
 async function resolveCategoryId(categoryName: string) {
@@ -92,9 +122,9 @@ async function uniqueServiceSlug(base: string, excludeId?: number) {
 export async function createProductAction(formData: FormData) {
   await requireAdmin();
 
-  let uploadedUrl: string | null = null;
+  let uploadedUrls: string[] = [];
   try {
-    uploadedUrl = await uploadImageIfPresent(formData);
+    uploadedUrls = await uploadImagesIfPresent(formData, "imageFiles");
   } catch (err) {
     redirect(
       `/admin/productos/nuevo?error=${encodeURIComponent(
@@ -103,12 +133,15 @@ export async function createProductAction(formData: FormData) {
     );
   }
 
+  const manualUrl = formData.get("imageUrl")?.toString().trim() || "";
+  const coverUrl = uploadedUrls[0] || manualUrl;
+
   const parsed = productSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
     price: formData.get("price"),
     stock: formData.get("stock"),
-    imageUrl: uploadedUrl || formData.get("imageUrl"),
+    imageUrl: coverUrl,
     categoryName: formData.get("categoryName"),
     active: formData.get("active") === "on",
   });
@@ -125,7 +158,23 @@ export async function createProductAction(formData: FormData) {
   const categoryId = await resolveCategoryId(categoryName);
   const slug = await uniqueSlug(data.name);
 
-  await db.insert(products).values({ ...data, slug, categoryId });
+  const [product] = await db
+    .insert(products)
+    .values({ ...data, slug, categoryId })
+    .returning();
+
+  // Todas las fotos subidas (incluida la portada) quedan también en la
+  // galería, para que se muestren todas en la ficha del producto.
+  const galleryUrls = uploadedUrls.length > 0 ? uploadedUrls : manualUrl ? [manualUrl] : [];
+  if (galleryUrls.length > 0) {
+    await db.insert(productImages).values(
+      galleryUrls.slice(0, MAX_PRODUCT_IMAGES).map((url, i) => ({
+        productId: product.id,
+        url,
+        sortOrder: i,
+      }))
+    );
+  }
 
   revalidatePath("/admin/productos");
   revalidatePath("/productos");
@@ -137,9 +186,9 @@ export async function updateProductAction(formData: FormData) {
 
   const id = Number(formData.get("id"));
 
-  let uploadedUrl: string | null = null;
+  let uploadedUrls: string[] = [];
   try {
-    uploadedUrl = await uploadImageIfPresent(formData);
+    uploadedUrls = await uploadImagesIfPresent(formData, "imageFiles");
   } catch (err) {
     redirect(
       `/admin/productos/${id}?error=${encodeURIComponent(
@@ -148,12 +197,15 @@ export async function updateProductAction(formData: FormData) {
     );
   }
 
+  const manualUrl = formData.get("imageUrl")?.toString().trim() || "";
+  const coverUrl = uploadedUrls[0] || manualUrl;
+
   const parsed = productSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
     price: formData.get("price"),
     stock: formData.get("stock"),
-    imageUrl: uploadedUrl || formData.get("imageUrl"),
+    imageUrl: coverUrl,
     categoryName: formData.get("categoryName"),
     active: formData.get("active") === "on",
   });
@@ -174,9 +226,35 @@ export async function updateProductAction(formData: FormData) {
     .set({ ...data, categoryId })
     .where(eq(products.id, id));
 
+  if (uploadedUrls.length > 0) {
+    const existingImages = await db.query.productImages.findMany({
+      where: (pi, { eq: eqOp }) => eqOp(pi.productId, id),
+    });
+    const remainingSlots = Math.max(MAX_PRODUCT_IMAGES - existingImages.length, 0);
+    const toInsert = uploadedUrls.slice(0, remainingSlots);
+    if (toInsert.length > 0) {
+      await db.insert(productImages).values(
+        toInsert.map((url, i) => ({
+          productId: id,
+          url,
+          sortOrder: existingImages.length + i,
+        }))
+      );
+    }
+  }
+
   revalidatePath("/admin/productos");
   revalidatePath("/productos");
   redirect("/admin/productos");
+}
+
+export async function deleteProductImageAction(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get("id"));
+  const productId = Number(formData.get("productId"));
+  await db.delete(productImages).where(eq(productImages.id, id));
+  revalidatePath(`/admin/productos/${productId}`);
+  revalidatePath("/productos");
 }
 
 export async function deleteProductAction(formData: FormData) {

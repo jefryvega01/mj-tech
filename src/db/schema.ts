@@ -59,6 +59,24 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   }),
   orderItems: many(orderItems),
   options: many(productOptions),
+  images: many(productImages),
+}));
+
+// ---------- Galería de fotos por producto (hasta 5 por equipo) ----------
+export const productImages = pgTable("product_images", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id")
+    .notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+export const productImagesRelations = relations(productImages, ({ one }) => ({
+  product: one(products, {
+    fields: [productImages.productId],
+    references: [products.id],
+  }),
 }));
 
 // ---------- Opciones de producto (RAM, disco, procesador, color, etc.) ----------
@@ -236,6 +254,7 @@ export type Category = typeof categories.$inferSelect;
 export type Product = typeof products.$inferSelect;
 export type ProductOption = typeof productOptions.$inferSelect;
 export type ProductOptionValue = typeof productOptionValues.$inferSelect;
+export type ProductImage = typeof productImages.$inferSelect;
 export type Service = typeof services.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
 export type Order = typeof orders.$inferSelect;

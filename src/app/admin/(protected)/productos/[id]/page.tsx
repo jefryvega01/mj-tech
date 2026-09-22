@@ -7,6 +7,7 @@ import {
   deleteProductOptionAction,
   createProductOptionValueAction,
   deleteProductOptionValueAction,
+  deleteProductImageAction,
 } from "@/app/actions/admin";
 
 export default async function EditProductPage({
@@ -30,10 +31,14 @@ export default async function EditProductPage({
           values: { orderBy: (v, { asc }) => asc(v.sortOrder) },
         },
       },
+      images: {
+        orderBy: (pi, { asc }) => asc(pi.sortOrder),
+      },
     },
   });
 
   if (!product) notFound();
+  const remainingImageSlots = Math.max(5 - product.images.length, 0);
 
   return (
     <div className="flex max-w-2xl flex-col gap-4">
@@ -52,13 +57,38 @@ export default async function EditProductPage({
       >
         <input type="hidden" name="id" value={product.id} />
 
-        {product.imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="h-32 w-32 rounded-lg border border-black/10 object-cover dark:border-white/10"
-          />
+        {product.images.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <p className="text-xs text-black/50 dark:text-white/50">
+              Fotos actuales ({product.images.length}/5)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {product.images.map((img) => (
+                <div key={img.id} className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={img.url}
+                    alt={product.name}
+                    className="h-24 w-24 rounded-lg border border-black/10 object-cover dark:border-white/10"
+                  />
+                  <form
+                    action={deleteProductImageAction}
+                    className="absolute -right-2 -top-2"
+                  >
+                    <input type="hidden" name="id" value={img.id} />
+                    <input type="hidden" name="productId" value={product.id} />
+                    <button
+                      type="submit"
+                      title="Quitar foto"
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white shadow hover:bg-red-700"
+                    >
+                      ×
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         <label className="flex flex-col gap-1 text-sm">
@@ -115,13 +145,20 @@ export default async function EditProductPage({
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          Cambiar foto (opcional)
+          {remainingImageSlots > 0
+            ? `Agregar fotos (opcional, hasta ${remainingImageSlots} más)`
+            : "Ya tienes el máximo de 5 fotos"}
           <input
             type="file"
-            name="imageFile"
+            name="imageFiles"
             accept="image/*"
-            className="rounded-lg border border-black/15 px-3 py-2 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-[#2563eb] file:px-3 file:py-1.5 file:text-white dark:border-white/20 dark:bg-transparent"
+            multiple
+            disabled={remainingImageSlots === 0}
+            className="rounded-lg border border-black/15 px-3 py-2 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-[#2563eb] file:px-3 file:py-1.5 file:text-white disabled:opacity-50 dark:border-white/20 dark:bg-transparent"
           />
+          <span className="text-xs text-black/50 dark:text-white/50">
+            La primera foto nueva que subas reemplaza la portada del producto.
+          </span>
         </label>
 
         <label className="flex flex-col gap-1 text-sm">

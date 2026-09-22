@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
 import ProductPurchaseBox from "@/components/ProductPurchaseBox";
+import ProductGallery from "@/components/ProductGallery";
 
 export default async function ProductDetailPage({
   params,
@@ -18,25 +19,24 @@ export default async function ProductDetailPage({
           values: { orderBy: (v, { asc }) => asc(v.sortOrder) },
         },
       },
+      images: {
+        orderBy: (pi, { asc }) => asc(pi.sortOrder),
+      },
     },
   });
 
   if (!product || !product.active) notFound();
 
+  const galleryImages =
+    product.images.length > 0
+      ? product.images.map((img) => img.url)
+      : product.imageUrl
+        ? [product.imageUrl]
+        : [];
+
   return (
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-      <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#eff8ff] to-[#e0f2fe] text-6xl dark:from-[#0c1c2e] dark:to-[#0a1522]">
-        {product.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          "📦"
-        )}
-      </div>
+      <ProductGallery name={product.name} images={galleryImages} />
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-semibold">{product.name}</h1>
         <p className="whitespace-pre-line text-black/70 dark:text-white/70">
