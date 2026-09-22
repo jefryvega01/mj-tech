@@ -1,8 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { put } from "@vercel/blob";
 import { db } from "@/db";
-import { orders, orderItems, products } from "@/db/schema";
+import { orders, orderItems } from "@/db/schema";
 import { checkoutSchema } from "@/lib/validators";
 import { getSession } from "@/lib/session";
 import { eq } from "drizzle-orm";
@@ -116,20 +118,19 @@ export async function createOrderAction(formData: FormData) {
   const preferenceClient = getPreferenceClient();
 
   // Si no hay credenciales de Mercado Pago configuradas (MP_ACCESS_TOKEN en
-  // .env), la tienda sigue funcionando en modo demo: el pedido queda
-  // "pendiente" y se descuenta el stock de inmediato, igual que antes.
+  // .env), la tienda funciona con pago por transferencia bancaria: el
+  // pedido queda "pendiente", sin descontar stock todavía, y en la página
+  // de confirmación se le muestran al cliente los datos para transferir y
+  // puede subir su comprobante. El stock se descuenta recién cuando el
+  // admin aprueba el pedido (ver updateOrderStatusAction).
   if (!preferenceClient || !isMpConfigured()) {
-    for (const row of rowsToInsert) {
-      const product = productRows.find((p) => p.id === row.productId);
-      if (!product) continue;
-      const newStock = Math.max(product.stock - row.quantity, 0);
-      await db
-        .update(products)
-        .set({ stock: newStock })
-        .where(eq(products.id, product.id));
-    }
     redirect(`/checkout/confirmacion/${order.id}`);
   }
+
+  await db
+    .update(orders)
+    .set({ paymentMethod: "mercadopago" })
+    .where(eq(orders.id, order.id));
 
   const appUrl = getAppUrl();
   const isHttps = appUrl.startsWith("https://");
@@ -185,4 +186,52 @@ export async function createOrderAction(formData: FormData) {
   }
 
   redirect(checkoutUrl);
+}
+
+// El cliente sube el comprobante de su transferencia desde la página de
+// confirmación del pedido. No requiere sesión de admin: solo necesita
+// conocer el número de pedido (nadie más lo ve).
+export async function uploadPaymentProofAction(formData: FormData) {
+  const orderId = Number(formData.get("orderId"));
+  const file = formData.get("proofFile");
+
+  if (!orderId) {
+    redirect(`/checkout?error=${encodeURIComponent("Pedido inválido")}`);
+  }
+
+  if (!(file instanceof File) || file.size === 0) {
+    redirect(
+      `/checkout/confirmacion/${orderId}?error=${encodeURIComponent(
+        "Selecciona una imagen o PDF con tu comprobante"
+      )}`
+    );
+  }
+
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    redirect(
+      `/checkout/confirmacion/${orderId}?error=${encodeURIComponent(
+        "El almacenamiento de archivos no está configurado. Contacta a la tienda."
+      )}`
+    );
+  }
+
+  const order = await db.query.orders.findFirst({
+    where: (o, { eq: eqOp }) => eqOp(o.id, orderId),
+  });
+  if (!order) {
+    redirect(`/checkout?error=${encodeURIComponent("Pedido no encontrado")}`);
+  }
+
+  const ext = file.name.split(".").pop() || "jpg";
+  const key = `comprobantes/${orderId}-${Date.now()}.${ext}`;
+  const blob = await put(key, file, { access: "public" });
+
+  await db
+    .update(orders)
+    .set({ paymentProofUrl: blob.url })
+    .where(eq(orders.id, orderId));
+
+  revalidatePath(`/checkout/confirmacion/${orderId}`);
+  revalidatePath("/admin/pedidos");
+  redirect(`/checkout/confirmacion/${orderId}?comprobante=1`);
 }

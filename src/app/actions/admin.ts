@@ -25,6 +25,7 @@ import {
 } from "@/lib/validators";
 import { requireAdmin } from "@/lib/session";
 import { slugify } from "@/lib/format";
+import { sendReceiptEmail } from "@/lib/email";
 
 // Si el admin sube un archivo de imagen, lo guarda en Vercel Blob y
 // devuelve su URL pública. Si no subió nada (o el almacenamiento no está
@@ -493,7 +494,54 @@ export async function updateOrderStatusAction(formData: FormData) {
     | "enviado"
     | "entregado"
     | "cancelado";
+
+  const order = await db.query.orders.findFirst({
+    where: (o, { eq: eqOp }) => eqOp(o.id, id),
+    with: { items: true },
+  });
+
+  const wasAlreadyPaid = order?.status === "pagado";
+
   await db.update(orders).set({ status }).where(eq(orders.id, id));
+
+  // Al aprobar un pedido por transferencia (pasa a "pagado" por primera
+  // vez), descontamos el stock recién en este momento y le mandamos al
+  // cliente su comprobante de compra por correo.
+  if (order && status === "pagado" && !wasAlreadyPaid) {
+    for (const item of order.items) {
+      const product = await db.query.products.findFirst({
+        where: (p, { eq: eqOp }) => eqOp(p.id, item.productId),
+      });
+      if (!product) continue;
+      const newStock = Math.max(product.stock - item.quantity, 0);
+      await db
+        .update(products)
+        .set({ stock: newStock })
+        .where(eq(products.id, product.id));
+    }
+
+    if (order.paymentMethod === "transferencia") {
+      const sent = await sendReceiptEmail({
+        id: order.id,
+        customerName: order.customerName,
+        customerEmail: order.customerEmail,
+        total: order.total,
+        items: order.items.map((i) => ({
+          productName: i.productName,
+          quantity: i.quantity,
+          unitPrice: i.unitPrice,
+          selectedOptions: i.selectedOptions,
+        })),
+      });
+      if (sent) {
+        await db
+          .update(orders)
+          .set({ receiptSentAt: new Date() })
+          .where(eq(orders.id, id));
+      }
+    }
+  }
+
   revalidatePath("/admin/pedidos");
 }
 

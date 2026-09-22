@@ -42,6 +42,27 @@ export default async function AdminOrdersPage() {
                       {order.mpStatusDetail ? ` · ${order.mpStatusDetail}` : ""}
                     </p>
                   )}
+                  {order.paymentMethod === "transferencia" && (
+                    <p className="text-xs text-black/40 dark:text-white/40">
+                      Pago por transferencia
+                      {order.paymentProofUrl ? (
+                        <>
+                          {" · "}
+                          <a
+                            href={order.paymentProofUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-[#2563eb] hover:underline dark:text-[#38bdf8]"
+                          >
+                            Ver comprobante
+                          </a>
+                        </>
+                      ) : (
+                        " · aún no sube comprobante"
+                      )}
+                      {order.receiptSentAt && " · comprobante de compra enviado"}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-semibold">{formatCLP(order.total)}</span>

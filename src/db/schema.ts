@@ -188,6 +188,14 @@ export const orders = pgTable("orders", {
   mpPreferenceId: text("mp_preference_id"),
   mpPaymentId: text("mp_payment_id"),
   mpStatusDetail: text("mp_status_detail"),
+  // Pago por transferencia bancaria
+  paymentMethod: text("payment_method", {
+    enum: ["mercadopago", "transferencia"],
+  })
+    .notNull()
+    .default("transferencia"),
+  paymentProofUrl: text("payment_proof_url").notNull().default(""),
+  receiptSentAt: timestamp("receipt_sent_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -247,6 +255,13 @@ export const siteSettings = pgTable("site_settings", {
   featuredServicesCount: integer("featured_services_count")
     .notNull()
     .default(3),
+  // Datos de transferencia bancaria que se muestran al cliente al pagar
+  transferBankName: text("transfer_bank_name").notNull().default(""),
+  transferAccountType: text("transfer_account_type").notNull().default(""),
+  transferAccountNumber: text("transfer_account_number").notNull().default(""),
+  transferHolderName: text("transfer_holder_name").notNull().default(""),
+  transferHolderRut: text("transfer_holder_rut").notNull().default(""),
+  transferEmail: text("transfer_email").notNull().default(""),
 });
 
 export type User = typeof users.$inferSelect;

@@ -155,6 +155,71 @@ export default async function AdminHomeSettingsPage({
           </div>
         </div>
 
+        <div className="flex flex-col gap-3 rounded-2xl border border-black/10 p-4 dark:border-white/10">
+          <div>
+            <p className="text-sm font-medium">Datos para pago por transferencia</p>
+            <p className="text-xs text-black/50 dark:text-white/50">
+              Se le muestran al cliente después de comprar, para que pueda
+              transferir y subir su comprobante.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1 text-sm">
+              Banco
+              <input
+                name="transferBankName"
+                defaultValue={settings?.transferBankName || ""}
+                placeholder="Ej: Banco Estado"
+                className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Tipo de cuenta
+              <input
+                name="transferAccountType"
+                defaultValue={settings?.transferAccountType || ""}
+                placeholder="Ej: Cuenta Vista"
+                className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+              />
+            </label>
+          </div>
+          <label className="flex flex-col gap-1 text-sm">
+            Número de cuenta
+            <input
+              name="transferAccountNumber"
+              defaultValue={settings?.transferAccountNumber || ""}
+              className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+            />
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1 text-sm">
+              Nombre del titular
+              <input
+                name="transferHolderName"
+                defaultValue={settings?.transferHolderName || ""}
+                className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              RUT del titular
+              <input
+                name="transferHolderRut"
+                defaultValue={settings?.transferHolderRut || ""}
+                className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+              />
+            </label>
+          </div>
+          <label className="flex flex-col gap-1 text-sm">
+            Correo de contacto/confirmación
+            <input
+              name="transferEmail"
+              defaultValue={settings?.transferEmail || ""}
+              placeholder="Ej: pagos@mjtech.cl"
+              className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+            />
+          </label>
+        </div>
+
         <button
           type="submit"
           className="mt-2 self-start rounded-full bg-[#2563eb] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 dark:bg-[#38bdf8] dark:text-[#04141f]"

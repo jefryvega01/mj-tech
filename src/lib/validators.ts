@@ -49,6 +49,12 @@ export const siteSettingsSchema = z.object({
   showFeaturedServices: z.coerce.boolean().optional().default(true),
   featuredProductsCount: z.coerce.number().int().min(1).max(12).default(4),
   featuredServicesCount: z.coerce.number().int().min(1).max(12).default(3),
+  transferBankName: z.string().optional().default(""),
+  transferAccountType: z.string().optional().default(""),
+  transferAccountNumber: z.string().optional().default(""),
+  transferHolderName: z.string().optional().default(""),
+  transferHolderRut: z.string().optional().default(""),
+  transferEmail: z.string().optional().default(""),
 });
 
 export const bookingSchema = z.object({
