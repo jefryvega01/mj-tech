@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { formatCLP } from "@/lib/format";
-import AddToCartButton from "@/components/AddToCartButton";
+import ProductPurchaseBox from "@/components/ProductPurchaseBox";
 
 export default async function ProductDetailPage({
   params,
@@ -12,6 +11,14 @@ export default async function ProductDetailPage({
 
   const product = await db.query.products.findFirst({
     where: (p, { eq }) => eq(p.slug, slug),
+    with: {
+      options: {
+        orderBy: (o, { asc }) => asc(o.sortOrder),
+        with: {
+          values: { orderBy: (v, { asc }) => asc(v.sortOrder) },
+        },
+      },
+    },
   });
 
   if (!product || !product.active) notFound();
@@ -32,7 +39,6 @@ export default async function ProductDetailPage({
       </div>
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-semibold">{product.name}</h1>
-        <p className="text-xl font-semibold">{formatCLP(product.price)}</p>
         <p className="whitespace-pre-line text-black/70 dark:text-white/70">
           {product.description || "Sin descripción."}
         </p>
@@ -42,13 +48,14 @@ export default async function ProductDetailPage({
             : "Sin stock por el momento"}
         </p>
         <div className="max-w-xs pt-2">
-          <AddToCartButton
+          <ProductPurchaseBox
             productId={product.id}
             name={product.name}
             slug={product.slug}
-            price={product.price}
+            basePrice={product.price}
             imageUrl={product.imageUrl}
             stock={product.stock}
+            options={product.options}
           />
         </div>
       </div>

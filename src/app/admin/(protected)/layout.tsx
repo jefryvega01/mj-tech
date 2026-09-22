@@ -9,6 +9,7 @@ const links = [
   { href: "/admin/servicios", label: "Servicios" },
   { href: "/admin/pedidos", label: "Pedidos" },
   { href: "/admin/reservas", label: "Reservas" },
+  { href: "/admin/inicio", label: "Página de inicio" },
 ];
 
 export default async function AdminLayout({

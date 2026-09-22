@@ -58,7 +58,49 @@ export const productsRelations = relations(products, ({ one, many }) => ({
     references: [categories.id],
   }),
   orderItems: many(orderItems),
+  options: many(productOptions),
 }));
+
+// ---------- Opciones de producto (RAM, disco, procesador, color, etc.) ----------
+export const productOptions = pgTable("product_options", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id")
+    .notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // ej: "Memoria RAM"
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+export const productOptionsRelations = relations(
+  productOptions,
+  ({ one, many }) => ({
+    product: one(products, {
+      fields: [productOptions.productId],
+      references: [products.id],
+    }),
+    values: many(productOptionValues),
+  })
+);
+
+export const productOptionValues = pgTable("product_option_values", {
+  id: serial("id").primaryKey(),
+  optionId: integer("option_id")
+    .notNull()
+    .references(() => productOptions.id, { onDelete: "cascade" }),
+  label: text("label").notNull(), // ej: "16GB"
+  priceDelta: integer("price_delta").notNull().default(0), // se suma al precio base
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+export const productOptionValuesRelations = relations(
+  productOptionValues,
+  ({ one }) => ({
+    option: one(productOptions, {
+      fields: [productOptionValues.optionId],
+      references: [productOptions.id],
+    }),
+  })
+);
 
 // ---------- Servicios ----------
 export const services = pgTable("services", {
@@ -148,6 +190,8 @@ export const orderItems = pgTable("order_items", {
   productName: text("product_name").notNull(),
   unitPrice: integer("unit_price").notNull(),
   quantity: integer("quantity").notNull(),
+  // Texto legible con las opciones elegidas, ej: "RAM: 16GB, Disco: 512GB SSD"
+  selectedOptions: text("selected_options").notNull().default(""),
 });
 
 export const orderItemsRelations = relations(orderItems, ({ one }) => ({
@@ -158,10 +202,42 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   }),
 }));
 
+// ---------- Contenido editable del home ----------
+// Siempre hay una sola fila (id = 1) con la configuración vigente.
+export const siteSettings = pgTable("site_settings", {
+  id: serial("id").primaryKey(),
+  heroTitle: text("hero_title")
+    .notNull()
+    .default("Todo lo que necesitas, en un solo lugar."),
+  heroSubtitle: text("hero_subtitle")
+    .notNull()
+    .default(
+      "Compra productos y agenda servicios sin salir de la página. Envíos rápidos y horas disponibles todos los días."
+    ),
+  heroImageUrl: text("hero_image_url").notNull().default(""),
+  bannerEnabled: boolean("banner_enabled").notNull().default(false),
+  bannerText: text("banner_text").notNull().default(""),
+  showFeaturedProducts: boolean("show_featured_products")
+    .notNull()
+    .default(true),
+  showFeaturedServices: boolean("show_featured_services")
+    .notNull()
+    .default(true),
+  featuredProductsCount: integer("featured_products_count")
+    .notNull()
+    .default(4),
+  featuredServicesCount: integer("featured_services_count")
+    .notNull()
+    .default(3),
+});
+
 export type User = typeof users.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Product = typeof products.$inferSelect;
+export type ProductOption = typeof productOptions.$inferSelect;
+export type ProductOptionValue = typeof productOptionValues.$inferSelect;
 export type Service = typeof services.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
+export type SiteSettings = typeof siteSettings.$inferSelect;

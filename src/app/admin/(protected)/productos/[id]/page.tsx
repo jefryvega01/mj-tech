@@ -1,6 +1,13 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { updateProductAction } from "@/app/actions/admin";
+import { formatCLP } from "@/lib/format";
+import {
+  updateProductAction,
+  createProductOptionAction,
+  deleteProductOptionAction,
+  createProductOptionValueAction,
+  deleteProductOptionValueAction,
+} from "@/app/actions/admin";
 
 export default async function EditProductPage({
   params,
@@ -11,16 +18,25 @@ export default async function EditProductPage({
 }) {
   const { id } = await params;
   const { error } = await searchParams;
+  const productId = Number(id);
 
   const product = await db.query.products.findFirst({
-    where: (p, { eq }) => eq(p.id, Number(id)),
-    with: { category: true },
+    where: (p, { eq }) => eq(p.id, productId),
+    with: {
+      category: true,
+      options: {
+        orderBy: (o, { asc }) => asc(o.sortOrder),
+        with: {
+          values: { orderBy: (v, { asc }) => asc(v.sortOrder) },
+        },
+      },
+    },
   });
 
   if (!product) notFound();
 
   return (
-    <div className="flex max-w-lg flex-col gap-4">
+    <div className="flex max-w-2xl flex-col gap-4">
       <h1 className="text-2xl font-semibold">Editar producto</h1>
 
       {error && (
@@ -32,7 +48,7 @@ export default async function EditProductPage({
       <form
         action={updateProductAction}
         encType="multipart/form-data"
-        className="flex flex-col gap-3"
+        className="flex max-w-lg flex-col gap-3"
       >
         <input type="hidden" name="id" value={product.id} />
 
@@ -129,6 +145,127 @@ export default async function EditProductPage({
           Guardar cambios
         </button>
       </form>
+
+      <div className="flex flex-col gap-4 border-t border-black/10 pt-6 dark:border-white/10">
+        <div>
+          <h2 className="text-lg font-semibold">Variaciones</h2>
+          <p className="text-sm text-black/60 dark:text-white/60">
+            Crea grupos de opciones (RAM, disco duro, procesador, color, etc.)
+            y sus valores. Cada valor puede sumar o restar del precio base.
+          </p>
+        </div>
+
+        {product.options.length === 0 && (
+          <p className="text-sm text-black/50 dark:text-white/50">
+            Este producto todavía no tiene variaciones.
+          </p>
+        )}
+
+        {product.options.map((option) => (
+          <div
+            key={option.id}
+            className="flex flex-col gap-3 rounded-2xl border border-black/10 p-4 dark:border-white/10"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">{option.name}</h3>
+              <form action={deleteProductOptionAction}>
+                <input type="hidden" name="id" value={option.id} />
+                <input type="hidden" name="productId" value={product.id} />
+                <button
+                  type="submit"
+                  className="text-xs font-medium text-red-600 hover:underline dark:text-red-400"
+                >
+                  Eliminar grupo
+                </button>
+              </form>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {option.values.map((value) => (
+                <div
+                  key={value.id}
+                  className="flex items-center justify-between rounded-lg bg-black/5 px-3 py-2 text-sm dark:bg-white/10"
+                >
+                  <span>
+                    {value.label}
+                    {value.priceDelta !== 0 && (
+                      <span className="ml-2 text-black/50 dark:text-white/50">
+                        ({value.priceDelta > 0 ? "+" : ""}
+                        {formatCLP(value.priceDelta)})
+                      </span>
+                    )}
+                  </span>
+                  <form action={deleteProductOptionValueAction}>
+                    <input type="hidden" name="id" value={value.id} />
+                    <input type="hidden" name="productId" value={product.id} />
+                    <button
+                      type="submit"
+                      className="text-xs font-medium text-red-600 hover:underline dark:text-red-400"
+                    >
+                      Quitar
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+
+            <form
+              action={createProductOptionValueAction}
+              className="flex flex-wrap items-end gap-2 pt-1"
+            >
+              <input type="hidden" name="optionId" value={option.id} />
+              <input type="hidden" name="productId" value={product.id} />
+              <label className="flex flex-col gap-1 text-xs">
+                Valor
+                <input
+                  name="label"
+                  required
+                  placeholder="Ej: 16GB"
+                  className="rounded-lg border border-black/15 px-3 py-1.5 text-sm dark:border-white/20 dark:bg-transparent"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-xs">
+                Ajuste de precio (CLP)
+                <input
+                  type="number"
+                  name="priceDelta"
+                  defaultValue={0}
+                  placeholder="0"
+                  className="w-32 rounded-lg border border-black/15 px-3 py-1.5 text-sm dark:border-white/20 dark:bg-transparent"
+                />
+              </label>
+              <button
+                type="submit"
+                className="rounded-full border border-black/15 px-3 py-1.5 text-xs font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+              >
+                Agregar valor
+              </button>
+            </form>
+          </div>
+        ))}
+
+        <form
+          action={createProductOptionAction}
+          className="flex flex-wrap items-end gap-2 rounded-2xl border border-dashed border-black/15 p-4 dark:border-white/20"
+        >
+          <input type="hidden" name="productId" value={product.id} />
+          <label className="flex flex-col gap-1 text-xs">
+            Nuevo grupo de opciones
+            <input
+              name="name"
+              required
+              placeholder="Ej: Memoria RAM"
+              className="rounded-lg border border-black/15 px-3 py-1.5 text-sm dark:border-white/20 dark:bg-transparent"
+            />
+          </label>
+          <button
+            type="submit"
+            className="rounded-full bg-[#2563eb] px-4 py-1.5 text-xs font-medium text-white hover:opacity-90 dark:bg-[#38bdf8] dark:text-[#04141f]"
+          >
+            Crear grupo
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

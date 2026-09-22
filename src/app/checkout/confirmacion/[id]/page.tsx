@@ -63,11 +63,18 @@ export default async function OrderConfirmedPage({
 
       <div className="w-full rounded-2xl border border-black/10 p-4 text-left text-sm dark:border-white/10">
         {order.items.map((item) => (
-          <div key={item.id} className="flex justify-between py-1">
-            <span>
-              {item.quantity} × {item.productName}
-            </span>
-            <span>{formatCLP(item.unitPrice * item.quantity)}</span>
+          <div key={item.id} className="flex flex-col gap-0.5 py-1">
+            <div className="flex justify-between">
+              <span>
+                {item.quantity} × {item.productName}
+              </span>
+              <span>{formatCLP(item.unitPrice * item.quantity)}</span>
+            </div>
+            {item.selectedOptions && (
+              <span className="text-xs text-black/40 dark:text-white/40">
+                {item.selectedOptions}
+              </span>
+            )}
           </div>
         ))}
       </div>

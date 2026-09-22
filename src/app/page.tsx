@@ -4,29 +4,56 @@ import ProductCard from "@/components/ProductCard";
 import ServiceCard from "@/components/ServiceCard";
 
 export default async function HomePage() {
+  const settings = await db.query.siteSettings.findFirst();
+
+  const showFeaturedProducts = settings?.showFeaturedProducts ?? true;
+  const showFeaturedServices = settings?.showFeaturedServices ?? true;
+
   const [featuredProducts, featuredServices] = await Promise.all([
-    db.query.products.findMany({
-      where: (p, { eq }) => eq(p.active, true),
-      limit: 4,
-      orderBy: (p, { desc }) => desc(p.createdAt),
-    }),
-    db.query.services.findMany({
-      where: (s, { eq }) => eq(s.active, true),
-      limit: 3,
-      orderBy: (s, { desc }) => desc(s.createdAt),
-    }),
+    showFeaturedProducts
+      ? db.query.products.findMany({
+          where: (p, { eq }) => eq(p.active, true),
+          limit: settings?.featuredProductsCount ?? 4,
+          orderBy: (p, { desc }) => desc(p.createdAt),
+          with: { options: { columns: { id: true } } },
+        })
+      : Promise.resolve([]),
+    showFeaturedServices
+      ? db.query.services.findMany({
+          where: (s, { eq }) => eq(s.active, true),
+          limit: settings?.featuredServicesCount ?? 3,
+          orderBy: (s, { desc }) => desc(s.createdAt),
+        })
+      : Promise.resolve([]),
   ]);
+
+  const heroTitle = settings?.heroTitle || "Todo lo que necesitas, en un solo lugar.";
+  const heroSubtitle =
+    settings?.heroSubtitle ||
+    "Compra productos y agenda servicios sin salir de la página. Envíos rápidos y horas disponibles todos los días.";
 
   return (
     <div className="flex flex-col gap-16">
-      <section className="flex flex-col items-start gap-4 rounded-3xl border border-black/5 bg-gradient-to-br from-[#eff8ff] to-white px-6 py-12 dark:border-white/10 dark:from-[#0c1c2e] dark:to-[#0a0f1a] sm:px-10">
+      {settings?.bannerEnabled && settings.bannerText && (
+        <div className="brand-gradient-bg -mt-8 rounded-b-xl px-4 py-2 text-center text-sm font-medium text-white">
+          {settings.bannerText}
+        </div>
+      )}
+
+      <section className="flex flex-col items-start gap-4 overflow-hidden rounded-3xl border border-black/5 bg-gradient-to-br from-[#eff8ff] to-white px-6 py-12 dark:border-white/10 dark:from-[#0c1c2e] dark:to-[#0a0f1a] sm:px-10">
+        {settings?.heroImageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={settings.heroImageUrl}
+            alt=""
+            className="mb-2 max-h-40 rounded-xl object-cover"
+          />
+        )}
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          <span className="brand-gradient-text">Todo lo que necesitas</span>,
-          en un solo lugar.
+          {heroTitle}
         </h1>
         <p className="max-w-xl text-black/60 dark:text-white/60">
-          Compra productos y agenda servicios sin salir de la página. Envíos
-          rápidos y horas disponibles todos los días.
+          {heroSubtitle}
         </p>
         <div className="flex gap-3 pt-2">
           <Link
@@ -44,7 +71,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {featuredProducts.length > 0 && (
+      {showFeaturedProducts && featuredProducts.length > 0 && (
         <section className="flex flex-col gap-6">
           <div className="flex items-baseline justify-between">
             <h2 className="text-xl font-semibold">Productos destacados</h2>
@@ -60,7 +87,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      {featuredServices.length > 0 && (
+      {showFeaturedServices && featuredServices.length > 0 && (
         <section className="flex flex-col gap-6">
           <div className="flex items-baseline justify-between">
             <h2 className="text-xl font-semibold">Servicios</h2>

@@ -11,8 +11,17 @@ import {
   categories,
   orders,
   bookings,
+  productOptions,
+  productOptionValues,
+  siteSettings,
 } from "@/db/schema";
-import { productSchema, serviceSchema } from "@/lib/validators";
+import {
+  productSchema,
+  serviceSchema,
+  productOptionSchema,
+  productOptionValueSchema,
+  siteSettingsSchema,
+} from "@/lib/validators";
 import { requireAdmin } from "@/lib/session";
 import { slugify } from "@/lib/format";
 
@@ -265,6 +274,130 @@ export async function deleteServiceAction(formData: FormData) {
   await db.delete(services).where(eq(services.id, id));
   revalidatePath("/admin/servicios");
   revalidatePath("/servicios");
+}
+
+// ---------- Opciones de producto (RAM, disco, procesador, color, etc.) ----------
+
+export async function createProductOptionAction(formData: FormData) {
+  await requireAdmin();
+  const productId = Number(formData.get("productId"));
+
+  const parsed = productOptionSchema.safeParse({
+    name: formData.get("name"),
+  });
+  if (!parsed.success) {
+    redirect(
+      `/admin/productos/${productId}?error=${encodeURIComponent(
+        parsed.error.issues[0]?.message || "Datos inválidos"
+      )}`
+    );
+  }
+
+  await db.insert(productOptions).values({
+    productId,
+    name: parsed.data.name,
+  });
+
+  revalidatePath(`/admin/productos/${productId}`);
+  revalidatePath("/productos");
+  redirect(`/admin/productos/${productId}`);
+}
+
+export async function deleteProductOptionAction(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get("id"));
+  const productId = Number(formData.get("productId"));
+  await db.delete(productOptions).where(eq(productOptions.id, id));
+  revalidatePath(`/admin/productos/${productId}`);
+  revalidatePath("/productos");
+}
+
+export async function createProductOptionValueAction(formData: FormData) {
+  await requireAdmin();
+  const optionId = Number(formData.get("optionId"));
+  const productId = Number(formData.get("productId"));
+
+  const parsed = productOptionValueSchema.safeParse({
+    label: formData.get("label"),
+    priceDelta: formData.get("priceDelta"),
+  });
+  if (!parsed.success) {
+    redirect(
+      `/admin/productos/${productId}?error=${encodeURIComponent(
+        parsed.error.issues[0]?.message || "Datos inválidos"
+      )}`
+    );
+  }
+
+  await db.insert(productOptionValues).values({
+    optionId,
+    label: parsed.data.label,
+    priceDelta: parsed.data.priceDelta,
+  });
+
+  revalidatePath(`/admin/productos/${productId}`);
+  revalidatePath("/productos");
+  redirect(`/admin/productos/${productId}`);
+}
+
+export async function deleteProductOptionValueAction(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get("id"));
+  const productId = Number(formData.get("productId"));
+  await db.delete(productOptionValues).where(eq(productOptionValues.id, id));
+  revalidatePath(`/admin/productos/${productId}`);
+  revalidatePath("/productos");
+}
+
+// ---------- Configuración del home ----------
+
+export async function updateSiteSettingsAction(formData: FormData) {
+  await requireAdmin();
+
+  let uploadedUrl: string | null = null;
+  try {
+    uploadedUrl = await uploadImageIfPresent(formData);
+  } catch (err) {
+    redirect(
+      `/admin/inicio?error=${encodeURIComponent(
+        err instanceof Error ? err.message : "No se pudo subir la imagen"
+      )}`
+    );
+  }
+
+  const parsed = siteSettingsSchema.safeParse({
+    heroTitle: formData.get("heroTitle"),
+    heroSubtitle: formData.get("heroSubtitle"),
+    heroImageUrl: uploadedUrl || formData.get("heroImageUrl"),
+    bannerEnabled: formData.get("bannerEnabled") === "on",
+    bannerText: formData.get("bannerText"),
+    showFeaturedProducts: formData.get("showFeaturedProducts") === "on",
+    showFeaturedServices: formData.get("showFeaturedServices") === "on",
+    featuredProductsCount: formData.get("featuredProductsCount"),
+    featuredServicesCount: formData.get("featuredServicesCount"),
+  });
+
+  if (!parsed.success) {
+    redirect(
+      `/admin/inicio?error=${encodeURIComponent(
+        parsed.error.issues[0]?.message || "Datos inválidos"
+      )}`
+    );
+  }
+
+  const existing = await db.query.siteSettings.findFirst();
+  if (existing) {
+    await db
+      .update(siteSettings)
+      .set(parsed.data)
+      .where(eq(siteSettings.id, existing.id));
+  } else {
+    await db.insert(siteSettings).values(parsed.data);
+  }
+
+  revalidatePath("/admin/inicio");
+  revalidatePath("/");
+  redirect("/admin/inicio?ok=1");
 }
 
 // ---------- Pedidos ----------

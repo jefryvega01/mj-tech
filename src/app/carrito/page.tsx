@@ -27,7 +27,7 @@ export default function CartPage() {
 
       <div className="flex flex-col divide-y divide-black/10 dark:divide-white/10">
         {items.map((item) => (
-          <div key={item.productId} className="flex items-center gap-4 py-4">
+          <div key={item.cartKey} className="flex items-center gap-4 py-4">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[#eff8ff] to-[#e0f2fe] text-2xl dark:from-[#0c1c2e] dark:to-[#0a1522]">
               {item.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -44,6 +44,13 @@ export default function CartPage() {
               <Link href={`/productos/${item.slug}`} className="font-medium hover:underline">
                 {item.name}
               </Link>
+              {item.selectedOptions && item.selectedOptions.length > 0 && (
+                <p className="text-xs text-black/50 dark:text-white/50">
+                  {item.selectedOptions
+                    .map((o) => `${o.optionName}: ${o.valueLabel}`)
+                    .join(" · ")}
+                </p>
+              )}
               <p className="text-sm text-black/50 dark:text-white/50">
                 {formatCLP(item.price)} c/u
               </p>
@@ -53,7 +60,7 @@ export default function CartPage() {
               min={1}
               value={item.quantity}
               onChange={(e) =>
-                updateQuantity(item.productId, Number(e.target.value) || 1)
+                updateQuantity(item.cartKey, Number(e.target.value) || 1)
               }
               className="w-16 rounded-lg border border-black/15 px-2 py-1 text-center dark:border-white/20 dark:bg-transparent"
             />
@@ -62,7 +69,7 @@ export default function CartPage() {
             </p>
             <button
               type="button"
-              onClick={() => removeItem(item.productId)}
+              onClick={() => removeItem(item.cartKey)}
               className="text-sm text-black/40 hover:text-red-600 dark:text-white/40"
               aria-label="Quitar"
             >

@@ -3,7 +3,13 @@ import { formatCLP } from "@/lib/format";
 import type { Product } from "@/db/schema";
 import AddToCartButton from "./AddToCartButton";
 
-export default function ProductCard({ product }: { product: Product }) {
+type ProductWithOptions = Product & { options?: { id: number }[] };
+
+export default function ProductCard({
+  product,
+}: {
+  product: ProductWithOptions;
+}) {
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-[#2563eb]/40 dark:border-white/10 dark:hover:border-[#38bdf8]/40">
       <Link
@@ -34,6 +40,7 @@ export default function ProductCard({ product }: { product: Product }) {
             price={product.price}
             imageUrl={product.imageUrl}
             stock={product.stock}
+            hasOptions={(product.options?.length ?? 0) > 0}
           />
         </div>
       </div>

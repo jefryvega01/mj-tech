@@ -45,7 +45,14 @@ export default function CheckoutForm({
             type="hidden"
             name="items"
             value={JSON.stringify(
-              items.map((i) => ({ productId: i.productId, quantity: i.quantity }))
+              items.map((i) => ({
+                productId: i.productId,
+                quantity: i.quantity,
+                unitPrice: i.price,
+                selectedOptions: (i.selectedOptions ?? [])
+                  .map((o) => `${o.optionName}: ${o.valueLabel}`)
+                  .join(", "),
+              }))
             )}
           />
 
@@ -111,11 +118,20 @@ export default function CheckoutForm({
         <h2 className="text-lg font-semibold">Resumen</h2>
         <div className="flex flex-col divide-y divide-black/10 dark:divide-white/10">
           {items.map((item) => (
-            <div key={item.productId} className="flex justify-between py-2 text-sm">
-              <span>
-                {item.quantity} × {item.name}
-              </span>
-              <span>{formatCLP(item.price * item.quantity)}</span>
+            <div key={item.cartKey} className="flex flex-col gap-0.5 py-2 text-sm">
+              <div className="flex justify-between">
+                <span>
+                  {item.quantity} × {item.name}
+                </span>
+                <span>{formatCLP(item.price * item.quantity)}</span>
+              </div>
+              {item.selectedOptions && item.selectedOptions.length > 0 && (
+                <span className="text-xs text-black/50 dark:text-white/50">
+                  {item.selectedOptions
+                    .map((o) => `${o.optionName}: ${o.valueLabel}`)
+                    .join(" · ")}
+                </span>
+              )}
             </div>
           ))}
         </div>

@@ -13,7 +13,12 @@ import {
 } from "@/lib/mercadopago";
 
 export async function createOrderAction(formData: FormData) {
-  let items: { productId: number; quantity: number }[] = [];
+  let items: {
+    productId: number;
+    quantity: number;
+    unitPrice?: number;
+    selectedOptions?: string;
+  }[] = [];
   try {
     items = JSON.parse(formData.get("items")?.toString() || "[]");
   } catch {
@@ -59,13 +64,21 @@ export async function createOrderAction(formData: FormData) {
       item.quantity,
       Math.max(product.stock, 0) || item.quantity
     );
-    total += product.price * quantity;
+    // Precio ya ajustado por las opciones elegidas (RAM, disco, etc.),
+    // calculado en el cliente. Si no viene (o es inválido), se usa el
+    // precio base del producto como respaldo.
+    const unitPrice =
+      typeof item.unitPrice === "number" && item.unitPrice >= 0
+        ? item.unitPrice
+        : product.price;
+    total += unitPrice * quantity;
     return [
       {
         productId: product.id,
         productName: product.name,
-        unitPrice: product.price,
+        unitPrice,
         quantity,
+        selectedOptions: item.selectedOptions || "",
       },
     ];
   });

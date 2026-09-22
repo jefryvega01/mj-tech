@@ -30,6 +30,27 @@ export const serviceSchema = z.object({
   active: z.coerce.boolean().optional().default(true),
 });
 
+export const productOptionSchema = z.object({
+  name: z.string().min(1, "Nombre de la opción requerido"),
+});
+
+export const productOptionValueSchema = z.object({
+  label: z.string().min(1, "Valor requerido"),
+  priceDelta: z.coerce.number().int().default(0),
+});
+
+export const siteSettingsSchema = z.object({
+  heroTitle: z.string().min(1, "El título es requerido"),
+  heroSubtitle: z.string().optional().default(""),
+  heroImageUrl: z.string().optional().default(""),
+  bannerEnabled: z.coerce.boolean().optional().default(false),
+  bannerText: z.string().optional().default(""),
+  showFeaturedProducts: z.coerce.boolean().optional().default(true),
+  showFeaturedServices: z.coerce.boolean().optional().default(true),
+  featuredProductsCount: z.coerce.number().int().min(1).max(12).default(4),
+  featuredServicesCount: z.coerce.number().int().min(1).max(12).default(3),
+});
+
 export const bookingSchema = z.object({
   serviceId: z.coerce.number().int(),
   customerName: z.string().min(2, "Nombre requerido"),
@@ -50,6 +71,8 @@ export const checkoutSchema = z.object({
       z.object({
         productId: z.number().int(),
         quantity: z.number().int().min(1),
+        unitPrice: z.number().int().min(0).optional(),
+        selectedOptions: z.string().optional().default(""),
       })
     )
     .min(1, "El carrito está vacío"),

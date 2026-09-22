@@ -9,20 +9,39 @@ import {
   useState,
 } from "react";
 
+export type SelectedOption = {
+  optionName: string;
+  valueLabel: string;
+  priceDelta: number;
+};
+
 export type CartItem = {
   productId: number;
   name: string;
   slug: string;
-  price: number;
+  price: number; // precio final, ya incluye las opciones elegidas
   imageUrl: string;
   quantity: number;
+  selectedOptions?: SelectedOption[];
+  cartKey: string; // identifica la línea (producto + opciones elegidas)
 };
+
+function makeCartKey(productId: number, selectedOptions?: SelectedOption[]) {
+  if (!selectedOptions || selectedOptions.length === 0) return String(productId);
+  const parts = selectedOptions
+    .map((o) => `${o.optionName}=${o.valueLabel}`)
+    .sort();
+  return `${productId}:${parts.join("|")}`;
+}
 
 type CartContextValue = {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
-  removeItem: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
+  addItem: (
+    item: Omit<CartItem, "quantity" | "cartKey">,
+    quantity?: number
+  ) => void;
+  removeItem: (cartKey: string) => void;
+  updateQuantity: (cartKey: string, quantity: number) => void;
   clear: () => void;
   totalItems: number;
   totalPrice: number;
@@ -56,31 +75,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, hydrated]);
 
   const addItem = useCallback(
-    (item: Omit<CartItem, "quantity">, quantity = 1) => {
+    (item: Omit<CartItem, "quantity" | "cartKey">, quantity = 1) => {
+      const cartKey = makeCartKey(item.productId, item.selectedOptions);
       setItems((prev) => {
-        const existing = prev.find((i) => i.productId === item.productId);
+        const existing = prev.find((i) => i.cartKey === cartKey);
         if (existing) {
           return prev.map((i) =>
-            i.productId === item.productId
+            i.cartKey === cartKey
               ? { ...i, quantity: i.quantity + quantity }
               : i
           );
         }
-        return [...prev, { ...item, quantity }];
+        return [...prev, { ...item, quantity, cartKey }];
       });
     },
     []
   );
 
-  const removeItem = useCallback((productId: number) => {
-    setItems((prev) => prev.filter((i) => i.productId !== productId));
+  const removeItem = useCallback((cartKey: string) => {
+    setItems((prev) => prev.filter((i) => i.cartKey !== cartKey));
   }, []);
 
-  const updateQuantity = useCallback((productId: number, quantity: number) => {
+  const updateQuantity = useCallback((cartKey: string, quantity: number) => {
     setItems((prev) =>
       quantity <= 0
-        ? prev.filter((i) => i.productId !== productId)
-        : prev.map((i) => (i.productId === productId ? { ...i, quantity } : i))
+        ? prev.filter((i) => i.cartKey !== cartKey)
+        : prev.map((i) => (i.cartKey === cartKey ? { ...i, quantity } : i))
     );
   }, []);
 

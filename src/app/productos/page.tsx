@@ -7,6 +7,7 @@ export default async function ProductsPage() {
   const items = await db.query.products.findMany({
     where: (p, { eq }) => eq(p.active, true),
     orderBy: (p, { desc }) => desc(p.createdAt),
+    with: { options: { columns: { id: true } } },
   });
 
   return (

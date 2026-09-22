@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useCart } from "./CartContext";
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
   price: number;
   imageUrl: string;
   stock: number;
+  hasOptions?: boolean;
 };
 
 export default function AddToCartButton({
@@ -19,6 +21,7 @@ export default function AddToCartButton({
   price,
   imageUrl,
   stock,
+  hasOptions,
 }: Props) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
@@ -32,6 +35,19 @@ export default function AddToCartButton({
       >
         Sin stock
       </button>
+    );
+  }
+
+  // Los productos con opciones (RAM, disco, etc.) se agregan desde su
+  // propia página, donde se eligen esas opciones antes del precio final.
+  if (hasOptions) {
+    return (
+      <Link
+        href={`/productos/${slug}`}
+        className="block w-full rounded-full bg-[#2563eb] px-4 py-2 text-center text-sm font-medium text-white transition hover:opacity-90 dark:bg-[#38bdf8] dark:text-[#04141f]"
+      >
+        Elegir opciones
+      </Link>
     );
   }
 

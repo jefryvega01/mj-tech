@@ -69,11 +69,18 @@ export default async function AdminOrdersPage() {
               </div>
               <div className="mt-3 flex flex-col divide-y divide-black/10 border-t border-black/10 pt-3 text-sm dark:divide-white/10 dark:border-white/10">
                 {order.items.map((item) => (
-                  <div key={item.id} className="flex justify-between py-1">
-                    <span>
-                      {item.quantity} × {item.productName}
-                    </span>
-                    <span>{formatCLP(item.unitPrice * item.quantity)}</span>
+                  <div key={item.id} className="flex flex-col gap-0.5 py-1">
+                    <div className="flex justify-between">
+                      <span>
+                        {item.quantity} × {item.productName}
+                      </span>
+                      <span>{formatCLP(item.unitPrice * item.quantity)}</span>
+                    </div>
+                    {item.selectedOptions && (
+                      <span className="text-xs text-black/40 dark:text-white/40">
+                        {item.selectedOptions}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
