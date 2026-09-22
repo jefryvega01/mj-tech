@@ -26,7 +26,7 @@ async function main() {
   }
 
   // ---- Categorías ----
-  const categoryNames = ["Neumáticos", "Repuestos", "Accesorios"];
+  const categoryNames = ["Notebooks", "PC de Escritorio", "Equipos Gamers"];
   const categoryIds: Record<string, number> = {};
   for (const name of categoryNames) {
     const slug = slugify(name);
@@ -45,49 +45,16 @@ async function main() {
   }
 
   // ---- Productos ----
-  const sampleProducts = [
-    {
-      name: "Neumático 195/65 R15",
-      description:
-        "Neumático radial para uso urbano, excelente agarre en seco y mojado.",
-      price: 79990,
-      stock: 24,
-      category: "Neumáticos",
-      imageUrl: "",
-    },
-    {
-      name: "Neumático 205/55 R16",
-      description: "Ideal para sedanes medianos, baja resistencia a la rodadura.",
-      price: 94990,
-      stock: 18,
-      category: "Neumáticos",
-      imageUrl: "",
-    },
-    {
-      name: "Filtro de aceite",
-      description: "Filtro de aceite de alta calidad, compatible con la mayoría de vehículos livianos.",
-      price: 8990,
-      stock: 60,
-      category: "Repuestos",
-      imageUrl: "",
-    },
-    {
-      name: "Pastillas de freno (juego)",
-      description: "Juego de pastillas de freno delanteras, cerámicas de bajo ruido.",
-      price: 34990,
-      stock: 30,
-      category: "Repuestos",
-      imageUrl: "",
-    },
-    {
-      name: "Tapa de llanta universal",
-      description: "Set de 4 tapas de llanta, ajuste universal.",
-      price: 12990,
-      stock: 40,
-      category: "Accesorios",
-      imageUrl: "",
-    },
-  ];
+  // Sin productos de ejemplo: agrega los tuyos desde /admin/productos/nuevo
+  // (ahí puedes subir una foto real de cada equipo).
+  const sampleProducts: {
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+    category: string;
+    imageUrl: string;
+  }[] = [];
 
   for (const p of sampleProducts) {
     const slug = slugify(p.name);
@@ -110,22 +77,25 @@ async function main() {
   // ---- Servicios ----
   const sampleServices = [
     {
-      name: "Instalación y balanceo de neumáticos",
-      description: "Montaje, balanceo y alineación básica incluidos.",
-      price: 14990,
-      durationMinutes: 45,
+      name: "Formateo e instalación de sistema operativo",
+      description:
+        "Formateo completo, instalación de Windows y controladores, respaldo de tus archivos.",
+      price: 15990,
+      durationMinutes: 60,
     },
     {
-      name: "Cambio de aceite y filtro",
-      description: "Cambio de aceite de motor y filtro, revisión de niveles.",
-      price: 24990,
-      durationMinutes: 40,
+      name: "Armado de PC a pedido",
+      description:
+        "Armamos tu equipo con las piezas que elijas, con pruebas de estabilidad incluidas.",
+      price: 29990,
+      durationMinutes: 90,
     },
     {
-      name: "Revisión de frenos",
-      description: "Diagnóstico y revisión del sistema de frenos completo.",
+      name: "Mantención y limpieza de equipo",
+      description:
+        "Limpieza interna, cambio de pasta térmica y revisión general de rendimiento.",
       price: 12990,
-      durationMinutes: 30,
+      durationMinutes: 45,
     },
   ];
 

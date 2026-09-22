@@ -5,8 +5,17 @@ import type { Service } from "@/db/schema";
 export default function ServiceCard({ service }: { service: Service }) {
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-[#2563eb]/40 dark:border-white/10 dark:hover:border-[#38bdf8]/40">
-      <div className="flex aspect-[3/2] items-center justify-center bg-gradient-to-br from-[#eff8ff] to-[#e0f2fe] text-3xl dark:from-[#0c1c2e] dark:to-[#0a1522]">
-        🛠️
+      <div className="flex aspect-[3/2] items-center justify-center overflow-hidden bg-gradient-to-br from-[#eff8ff] to-[#e0f2fe] text-3xl dark:from-[#0c1c2e] dark:to-[#0a1522]">
+        {service.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={service.imageUrl}
+            alt={service.name}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          "🛠️"
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
         <h3 className="font-medium">{service.name}</h3>

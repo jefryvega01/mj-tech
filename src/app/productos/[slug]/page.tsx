@@ -18,8 +18,17 @@ export default async function ProductDetailPage({
 
   return (
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-      <div className="flex aspect-square items-center justify-center rounded-2xl bg-black/5 text-6xl dark:bg-white/5">
-        📦
+      <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#eff8ff] to-[#e0f2fe] text-6xl dark:from-[#0c1c2e] dark:to-[#0a1522]">
+        {product.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          "📦"
+        )}
       </div>
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-semibold">{product.name}</h1>

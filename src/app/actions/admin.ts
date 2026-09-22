@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
+import { put } from "@vercel/blob";
 import { db } from "@/db";
 import {
   products,
@@ -14,6 +15,28 @@ import {
 import { productSchema, serviceSchema } from "@/lib/validators";
 import { requireAdmin } from "@/lib/session";
 import { slugify } from "@/lib/format";
+
+// Si el admin sube un archivo de imagen, lo guarda en Vercel Blob y
+// devuelve su URL pública. Si no subió nada (o el almacenamiento no está
+// configurado), devuelve null y se usa la URL manual del formulario.
+async function uploadImageIfPresent(formData: FormData) {
+  const file = formData.get("imageFile");
+  if (!(file instanceof File) || file.size === 0) return null;
+
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    throw new Error(
+      "El almacenamiento de imágenes no está configurado (falta BLOB_READ_WRITE_TOKEN). Revisa el README."
+    );
+  }
+
+  const ext = file.name.split(".").pop() || "jpg";
+  const key = `productos-servicios/${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}.${ext}`;
+
+  const blob = await put(key, file, { access: "public" });
+  return blob.url;
+}
 
 async function resolveCategoryId(categoryName: string) {
   if (!categoryName.trim()) return null;
@@ -60,12 +83,23 @@ async function uniqueServiceSlug(base: string, excludeId?: number) {
 export async function createProductAction(formData: FormData) {
   await requireAdmin();
 
+  let uploadedUrl: string | null = null;
+  try {
+    uploadedUrl = await uploadImageIfPresent(formData);
+  } catch (err) {
+    redirect(
+      `/admin/productos/nuevo?error=${encodeURIComponent(
+        err instanceof Error ? err.message : "No se pudo subir la imagen"
+      )}`
+    );
+  }
+
   const parsed = productSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
     price: formData.get("price"),
     stock: formData.get("stock"),
-    imageUrl: formData.get("imageUrl"),
+    imageUrl: uploadedUrl || formData.get("imageUrl"),
     categoryName: formData.get("categoryName"),
     active: formData.get("active") === "on",
   });
@@ -93,12 +127,24 @@ export async function updateProductAction(formData: FormData) {
   await requireAdmin();
 
   const id = Number(formData.get("id"));
+
+  let uploadedUrl: string | null = null;
+  try {
+    uploadedUrl = await uploadImageIfPresent(formData);
+  } catch (err) {
+    redirect(
+      `/admin/productos/${id}?error=${encodeURIComponent(
+        err instanceof Error ? err.message : "No se pudo subir la imagen"
+      )}`
+    );
+  }
+
   const parsed = productSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
     price: formData.get("price"),
     stock: formData.get("stock"),
-    imageUrl: formData.get("imageUrl"),
+    imageUrl: uploadedUrl || formData.get("imageUrl"),
     categoryName: formData.get("categoryName"),
     active: formData.get("active") === "on",
   });
@@ -137,12 +183,23 @@ export async function deleteProductAction(formData: FormData) {
 export async function createServiceAction(formData: FormData) {
   await requireAdmin();
 
+  let uploadedUrl: string | null = null;
+  try {
+    uploadedUrl = await uploadImageIfPresent(formData);
+  } catch (err) {
+    redirect(
+      `/admin/servicios/nuevo?error=${encodeURIComponent(
+        err instanceof Error ? err.message : "No se pudo subir la imagen"
+      )}`
+    );
+  }
+
   const parsed = serviceSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
     price: formData.get("price"),
     durationMinutes: formData.get("durationMinutes"),
-    imageUrl: formData.get("imageUrl"),
+    imageUrl: uploadedUrl || formData.get("imageUrl"),
     active: formData.get("active") === "on",
   });
 
@@ -166,12 +223,24 @@ export async function updateServiceAction(formData: FormData) {
   await requireAdmin();
 
   const id = Number(formData.get("id"));
+
+  let uploadedUrl: string | null = null;
+  try {
+    uploadedUrl = await uploadImageIfPresent(formData);
+  } catch (err) {
+    redirect(
+      `/admin/servicios/${id}?error=${encodeURIComponent(
+        err instanceof Error ? err.message : "No se pudo subir la imagen"
+      )}`
+    );
+  }
+
   const parsed = serviceSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
     price: formData.get("price"),
     durationMinutes: formData.get("durationMinutes"),
-    imageUrl: formData.get("imageUrl"),
+    imageUrl: uploadedUrl || formData.get("imageUrl"),
     active: formData.get("active") === "on",
   });
 

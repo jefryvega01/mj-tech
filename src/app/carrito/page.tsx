@@ -28,8 +28,17 @@ export default function CartPage() {
       <div className="flex flex-col divide-y divide-black/10 dark:divide-white/10">
         {items.map((item) => (
           <div key={item.productId} className="flex items-center gap-4 py-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-black/5 text-2xl dark:bg-white/5">
-              📦
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[#eff8ff] to-[#e0f2fe] text-2xl dark:from-[#0c1c2e] dark:to-[#0a1522]">
+              {item.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={item.imageUrl}
+                  alt={item.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                "📦"
+              )}
             </div>
             <div className="flex-1">
               <Link href={`/productos/${item.slug}`} className="font-medium hover:underline">

@@ -29,8 +29,21 @@ export default async function EditProductPage({
         </p>
       )}
 
-      <form action={updateProductAction} className="flex flex-col gap-3">
+      <form
+        action={updateProductAction}
+        encType="multipart/form-data"
+        className="flex flex-col gap-3"
+      >
         <input type="hidden" name="id" value={product.id} />
+
+        {product.imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            className="h-32 w-32 rounded-lg border border-black/10 object-cover dark:border-white/10"
+          />
+        )}
 
         <label className="flex flex-col gap-1 text-sm">
           Nombre
@@ -86,7 +99,17 @@ export default async function EditProductPage({
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          URL de imagen (opcional)
+          Cambiar foto (opcional)
+          <input
+            type="file"
+            name="imageFile"
+            accept="image/*"
+            className="rounded-lg border border-black/15 px-3 py-2 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-[#2563eb] file:px-3 file:py-1.5 file:text-white dark:border-white/20 dark:bg-transparent"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          … o URL de imagen
           <input
             name="imageUrl"
             defaultValue={product.imageUrl}

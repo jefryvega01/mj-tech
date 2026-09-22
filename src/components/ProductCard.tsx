@@ -8,9 +8,18 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className="flex flex-col overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-[#2563eb]/40 dark:border-white/10 dark:hover:border-[#38bdf8]/40">
       <Link
         href={`/productos/${product.slug}`}
-        className="flex aspect-square items-center justify-center bg-gradient-to-br from-[#eff8ff] to-[#e0f2fe] text-3xl dark:from-[#0c1c2e] dark:to-[#0a1522]"
+        className="flex aspect-square items-center justify-center overflow-hidden bg-gradient-to-br from-[#eff8ff] to-[#e0f2fe] text-3xl dark:from-[#0c1c2e] dark:to-[#0a1522]"
       >
-        📦
+        {product.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          "📦"
+        )}
       </Link>
       <div className="flex flex-1 flex-col gap-2 p-4">
         <Link href={`/productos/${product.slug}`} className="font-medium hover:underline">
