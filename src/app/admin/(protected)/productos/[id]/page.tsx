@@ -57,37 +57,17 @@ export default async function EditProductPage({
       >
         <input type="hidden" name="id" value={product.id} />
 
-        {product.images.length > 0 && (
+        {product.imageUrl && (
           <div className="flex flex-col gap-1">
             <p className="text-xs text-black/50 dark:text-white/50">
-              Fotos actuales ({product.images.length}/5)
+              Portada actual
             </p>
-            <div className="flex flex-wrap gap-2">
-              {product.images.map((img) => (
-                <div key={img.id} className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={img.url}
-                    alt={product.name}
-                    className="h-24 w-24 rounded-lg border border-black/10 object-cover dark:border-white/10"
-                  />
-                  <form
-                    action={deleteProductImageAction}
-                    className="absolute -right-2 -top-2"
-                  >
-                    <input type="hidden" name="id" value={img.id} />
-                    <input type="hidden" name="productId" value={product.id} />
-                    <button
-                      type="submit"
-                      title="Quitar foto"
-                      className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white shadow hover:bg-red-700"
-                    >
-                      ×
-                    </button>
-                  </form>
-                </div>
-              ))}
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="h-32 w-32 rounded-lg border border-black/10 object-cover dark:border-white/10"
+            />
           </div>
         )}
 
@@ -145,29 +125,39 @@ export default async function EditProductPage({
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          {remainingImageSlots > 0
-            ? `Agregar fotos (opcional, hasta ${remainingImageSlots} más)`
-            : "Ya tienes el máximo de 5 fotos"}
+          Cambiar portada (opcional)
           <input
             type="file"
-            name="imageFiles"
+            name="imageFile"
+            accept="image/*"
+            className="rounded-lg border border-black/15 px-3 py-2 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-[#2563eb] file:px-3 file:py-1.5 file:text-white dark:border-white/20 dark:bg-transparent"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          … o URL de imagen para la portada
+          <input
+            name="imageUrl"
+            defaultValue={product.imageUrl}
+            className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          {remainingImageSlots > 0
+            ? `Agregar otras fotos (opcional, hasta ${remainingImageSlots} más)`
+            : "Ya tienes el máximo de 5 fotos adicionales"}
+          <input
+            type="file"
+            name="galleryFiles"
             accept="image/*"
             multiple
             disabled={remainingImageSlots === 0}
             className="rounded-lg border border-black/15 px-3 py-2 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-[#2563eb] file:px-3 file:py-1.5 file:text-white disabled:opacity-50 dark:border-white/20 dark:bg-transparent"
           />
           <span className="text-xs text-black/50 dark:text-white/50">
-            La primera foto nueva que subas reemplaza la portada del producto.
+            Estas se muestran aparte de la portada, como fotos adicionales del producto.
           </span>
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          … o URL de imagen
-          <input
-            name="imageUrl"
-            defaultValue={product.imageUrl}
-            className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
-          />
         </label>
 
         <label className="flex items-center gap-2 text-sm">
@@ -182,6 +172,40 @@ export default async function EditProductPage({
           Guardar cambios
         </button>
       </form>
+
+      {product.images.length > 0 && (
+        <div className="flex flex-col gap-2 border-t border-black/10 pt-6 dark:border-white/10">
+          <p className="text-sm font-medium">
+            Fotos adicionales ({product.images.length}/5)
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {product.images.map((img) => (
+              <div key={img.id} className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={img.url}
+                  alt={product.name}
+                  className="h-24 w-24 rounded-lg border border-black/10 object-cover dark:border-white/10"
+                />
+                <form
+                  action={deleteProductImageAction}
+                  className="absolute -right-2 -top-2"
+                >
+                  <input type="hidden" name="id" value={img.id} />
+                  <input type="hidden" name="productId" value={product.id} />
+                  <button
+                    type="submit"
+                    title="Quitar foto"
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white shadow hover:bg-red-700"
+                  >
+                    ×
+                  </button>
+                </form>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-4 border-t border-black/10 pt-6 dark:border-white/10">
         <div>

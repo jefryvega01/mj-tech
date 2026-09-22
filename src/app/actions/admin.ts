@@ -122,9 +122,11 @@ async function uniqueServiceSlug(base: string, excludeId?: number) {
 export async function createProductAction(formData: FormData) {
   await requireAdmin();
 
-  let uploadedUrls: string[] = [];
+  let coverUpload: string | null = null;
+  let galleryUrls: string[] = [];
   try {
-    uploadedUrls = await uploadImagesIfPresent(formData, "imageFiles");
+    coverUpload = await uploadImageIfPresent(formData);
+    galleryUrls = await uploadImagesIfPresent(formData, "galleryFiles");
   } catch (err) {
     redirect(
       `/admin/productos/nuevo?error=${encodeURIComponent(
@@ -134,7 +136,7 @@ export async function createProductAction(formData: FormData) {
   }
 
   const manualUrl = formData.get("imageUrl")?.toString().trim() || "";
-  const coverUrl = uploadedUrls[0] || manualUrl;
+  const coverUrl = coverUpload || manualUrl;
 
   const parsed = productSchema.safeParse({
     name: formData.get("name"),
@@ -163,9 +165,8 @@ export async function createProductAction(formData: FormData) {
     .values({ ...data, slug, categoryId })
     .returning();
 
-  // Todas las fotos subidas (incluida la portada) quedan también en la
-  // galería, para que se muestren todas en la ficha del producto.
-  const galleryUrls = uploadedUrls.length > 0 ? uploadedUrls : manualUrl ? [manualUrl] : [];
+  // La galería es aparte de la portada: son las fotos adicionales del
+  // producto (hasta 5), no incluye la foto de portada.
   if (galleryUrls.length > 0) {
     await db.insert(productImages).values(
       galleryUrls.slice(0, MAX_PRODUCT_IMAGES).map((url, i) => ({
@@ -186,9 +187,11 @@ export async function updateProductAction(formData: FormData) {
 
   const id = Number(formData.get("id"));
 
-  let uploadedUrls: string[] = [];
+  let coverUpload: string | null = null;
+  let galleryUrls: string[] = [];
   try {
-    uploadedUrls = await uploadImagesIfPresent(formData, "imageFiles");
+    coverUpload = await uploadImageIfPresent(formData);
+    galleryUrls = await uploadImagesIfPresent(formData, "galleryFiles");
   } catch (err) {
     redirect(
       `/admin/productos/${id}?error=${encodeURIComponent(
@@ -198,7 +201,7 @@ export async function updateProductAction(formData: FormData) {
   }
 
   const manualUrl = formData.get("imageUrl")?.toString().trim() || "";
-  const coverUrl = uploadedUrls[0] || manualUrl;
+  const coverUrl = coverUpload || manualUrl;
 
   const parsed = productSchema.safeParse({
     name: formData.get("name"),
@@ -226,12 +229,13 @@ export async function updateProductAction(formData: FormData) {
     .set({ ...data, categoryId })
     .where(eq(products.id, id));
 
-  if (uploadedUrls.length > 0) {
+  // La galería es aparte de la portada: son fotos adicionales (hasta 5).
+  if (galleryUrls.length > 0) {
     const existingImages = await db.query.productImages.findMany({
       where: (pi, { eq: eqOp }) => eqOp(pi.productId, id),
     });
     const remainingSlots = Math.max(MAX_PRODUCT_IMAGES - existingImages.length, 0);
-    const toInsert = uploadedUrls.slice(0, remainingSlots);
+    const toInsert = galleryUrls.slice(0, remainingSlots);
     if (toInsert.length > 0) {
       await db.insert(productImages).values(
         toInsert.map((url, i) => ({
