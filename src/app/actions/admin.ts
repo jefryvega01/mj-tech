@@ -464,6 +464,12 @@ export async function updateSiteSettingsAction(formData: FormData) {
     transferHolderName: formData.get("transferHolderName"),
     transferHolderRut: formData.get("transferHolderRut"),
     transferEmail: formData.get("transferEmail"),
+    footerAddress: formData.get("footerAddress"),
+    footerReturnPolicy: formData.get("footerReturnPolicy"),
+    footerInstagramUrl: formData.get("footerInstagramUrl"),
+    footerFacebookUrl: formData.get("footerFacebookUrl"),
+    footerWhatsappUrl: formData.get("footerWhatsappUrl"),
+    footerTiktokUrl: formData.get("footerTiktokUrl"),
   });
 
   if (!parsed.success) {

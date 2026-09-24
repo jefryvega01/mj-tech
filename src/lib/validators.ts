@@ -55,6 +55,12 @@ export const siteSettingsSchema = z.object({
   transferHolderName: z.string().optional().default(""),
   transferHolderRut: z.string().optional().default(""),
   transferEmail: z.string().optional().default(""),
+  footerAddress: z.string().optional().default(""),
+  footerReturnPolicy: z.string().optional().default(""),
+  footerInstagramUrl: z.string().optional().default(""),
+  footerFacebookUrl: z.string().optional().default(""),
+  footerWhatsappUrl: z.string().optional().default(""),
+  footerTiktokUrl: z.string().optional().default(""),
 });
 
 export const bookingSchema = z.object({

@@ -262,6 +262,21 @@ export const siteSettings = pgTable("site_settings", {
   transferHolderName: text("transfer_holder_name").notNull().default(""),
   transferHolderRut: text("transfer_holder_rut").notNull().default(""),
   transferEmail: text("transfer_email").notNull().default(""),
+  // ---------- Footer ----------
+  footerAddress: text("footer_address")
+    .notNull()
+    .default("Pericles 1180, Ñuñoa, Santiago, Chile"),
+  footerReturnPolicy: text("footer_return_policy").notNull().default(
+    "Todas las compras son finales: no realizamos devolución de dinero. " +
+      "Si tu equipo presenta una falla de fábrica dentro del período de " +
+      "garantía, hacemos el cambio por un equipo equivalente, previa " +
+      "evaluación técnica. Para coordinar un cambio o resolver dudas, " +
+      "contáctanos directamente."
+  ),
+  footerInstagramUrl: text("footer_instagram_url").notNull().default(""),
+  footerFacebookUrl: text("footer_facebook_url").notNull().default(""),
+  footerWhatsappUrl: text("footer_whatsapp_url").notNull().default(""),
+  footerTiktokUrl: text("footer_tiktok_url").notNull().default(""),
 });
 
 export type User = typeof users.$inferSelect;

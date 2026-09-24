@@ -220,6 +220,75 @@ export default async function AdminHomeSettingsPage({
           </label>
         </div>
 
+        <div className="flex flex-col gap-3 rounded-2xl border border-black/10 p-4 dark:border-white/10">
+          <div>
+            <p className="text-sm font-medium">Pie de página (footer)</p>
+            <p className="text-xs text-black/50 dark:text-white/50">
+              Dirección, política de devoluciones y redes sociales que se
+              muestran al final de todas las páginas.
+            </p>
+          </div>
+
+          <label className="flex flex-col gap-1 text-sm">
+            Dirección (se usa también para el mapa)
+            <input
+              name="footerAddress"
+              defaultValue={settings?.footerAddress || ""}
+              placeholder="Ej: Pericles 1180, Ñuñoa, Santiago, Chile"
+              className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm">
+            Política de devoluciones
+            <textarea
+              name="footerReturnPolicy"
+              rows={4}
+              defaultValue={settings?.footerReturnPolicy || ""}
+              className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+            />
+          </label>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1 text-sm">
+              Instagram (link)
+              <input
+                name="footerInstagramUrl"
+                defaultValue={settings?.footerInstagramUrl || ""}
+                placeholder="https://instagram.com/tu_usuario"
+                className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Facebook (link)
+              <input
+                name="footerFacebookUrl"
+                defaultValue={settings?.footerFacebookUrl || ""}
+                placeholder="https://facebook.com/tu_pagina"
+                className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              WhatsApp (link)
+              <input
+                name="footerWhatsappUrl"
+                defaultValue={settings?.footerWhatsappUrl || ""}
+                placeholder="https://wa.me/56912345678"
+                className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              TikTok (link)
+              <input
+                name="footerTiktokUrl"
+                defaultValue={settings?.footerTiktokUrl || ""}
+                placeholder="https://tiktok.com/@tu_usuario"
+                className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+              />
+            </label>
+          </div>
+        </div>
+
         <button
           type="submit"
           className="mt-2 self-start rounded-full bg-[#2563eb] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 dark:bg-[#38bdf8] dark:text-[#04141f]"
