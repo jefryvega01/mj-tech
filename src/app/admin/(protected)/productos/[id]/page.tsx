@@ -21,6 +21,10 @@ export default async function EditProductPage({
   const { error } = await searchParams;
   const productId = Number(id);
 
+  const categories = await db.query.categories.findMany({
+    orderBy: (c, { asc }) => asc(c.name),
+  });
+
   const product = await db.query.products.findFirst({
     where: (p, { eq }) => eq(p.id, productId),
     with: {
@@ -117,9 +121,25 @@ export default async function EditProductPage({
 
         <label className="flex flex-col gap-1 text-sm">
           Categoría
-          <input
+          <select
             name="categoryName"
             defaultValue={product.category?.name || ""}
+            className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+          >
+            <option value="">+ Crear categoría nueva (escribe abajo)</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          Nombre de la categoría nueva
+          <input
+            name="categoryNameNew"
+            placeholder='Solo si elegiste "Crear categoría nueva" arriba'
             className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
           />
         </label>
