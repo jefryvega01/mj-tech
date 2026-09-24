@@ -458,6 +458,12 @@ export async function updateSiteSettingsAction(formData: FormData) {
     showFeaturedServices: formData.get("showFeaturedServices") === "on",
     featuredProductsCount: formData.get("featuredProductsCount"),
     featuredServicesCount: formData.get("featuredServicesCount"),
+    transferBankName: formData.get("transferBankName"),
+    transferAccountType: formData.get("transferAccountType"),
+    transferAccountNumber: formData.get("transferAccountNumber"),
+    transferHolderName: formData.get("transferHolderName"),
+    transferHolderRut: formData.get("transferHolderRut"),
+    transferEmail: formData.get("transferEmail"),
   });
 
   if (!parsed.success) {
