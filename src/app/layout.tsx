@@ -3,6 +3,7 @@ import "./globals.css";
 import { CartProvider } from "@/components/CartContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import WhatsappFloatButton from "@/components/WhatsappFloatButton";
 import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             {children}
           </main>
           <Footer />
+          <WhatsappFloatButton />
         </CartProvider>
       </body>
     </html>
