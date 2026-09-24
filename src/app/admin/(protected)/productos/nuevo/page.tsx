@@ -1,3 +1,4 @@
+import { db } from "@/db";
 import { createProductAction } from "@/app/actions/admin";
 
 export default async function NewProductPage({
@@ -6,6 +7,9 @@ export default async function NewProductPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
+  const categories = await db.query.categories.findMany({
+    orderBy: (c, { asc }) => asc(c.name),
+  });
 
   return (
     <div className="flex max-w-lg flex-col gap-4">
@@ -65,9 +69,25 @@ export default async function NewProductPage({
 
         <label className="flex flex-col gap-1 text-sm">
           Categoría
-          <input
+          <select
             name="categoryName"
-            placeholder="Ej: Neumáticos"
+            defaultValue=""
+            className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+          >
+            <option value="">+ Crear categoría nueva (escribe abajo)</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          Nombre de la categoría nueva
+          <input
+            name="categoryNameNew"
+            placeholder='Solo si elegiste "Crear categoría nueva" arriba'
             className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
           />
         </label>
