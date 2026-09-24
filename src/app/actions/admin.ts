@@ -78,6 +78,16 @@ async function uploadImagesIfPresent(formData: FormData, fieldName: string) {
   return urls;
 }
 
+// El formulario ofrece un <select> con las categorías existentes y, como
+// alternativa, un campo de texto para crear una categoría nueva. Si el
+// admin elige una categoría existente, esa gana; si deja el select en
+// "Crear categoría nueva" (valor vacío), se usa lo que haya escrito.
+function resolveCategoryNameFromForm(formData: FormData) {
+  const selected = formData.get("categoryName")?.toString().trim() || "";
+  const nuevo = formData.get("categoryNameNew")?.toString().trim() || "";
+  return selected || nuevo;
+}
+
 async function resolveCategoryId(categoryName: string) {
   if (!categoryName.trim()) return null;
   const slug = slugify(categoryName);
@@ -145,7 +155,7 @@ export async function createProductAction(formData: FormData) {
     price: formData.get("price"),
     stock: formData.get("stock"),
     imageUrl: coverUrl,
-    categoryName: formData.get("categoryName"),
+    categoryName: resolveCategoryNameFromForm(formData),
     active: formData.get("active") === "on",
   });
 
@@ -210,7 +220,7 @@ export async function updateProductAction(formData: FormData) {
     price: formData.get("price"),
     stock: formData.get("stock"),
     imageUrl: coverUrl,
-    categoryName: formData.get("categoryName"),
+    categoryName: resolveCategoryNameFromForm(formData),
     active: formData.get("active") === "on",
   });
 
